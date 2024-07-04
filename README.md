@@ -1,5 +1,24 @@
 # java TLV（Tag-Length-Value） 高效的序列化工具，可应用于通信、Redis缓存和消息队列等多种场景中
 
+### 支持类型如下，其他类型待实现
+```
+Integer.class,int.class
+byte.class,Byte.class
+boolean.class,Boolean.class
+char.class,Character.class
+short.class,Short.class
+float.class,Float.class
+long.class,Long.class
+String.class,CharSequence.class
+double.class,Double.class
+BigDecimal.class
+Date.class
+LocalTime.class
+LocalDate.class
+LocalDateTime.class
+List<XXX>
+数组[XXX]
+```
 
 ### gradle引入方式
 ```gradle
