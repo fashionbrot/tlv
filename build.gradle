@@ -1,0 +1,162 @@
+import java.time.LocalDateTime
+
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'signing'
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+jar {
+
+    // 将LICENSE文件添加到META-INF目录
+    into("META-INF/") {
+        from rootProject.file("LICENSE")
+    }
+
+    // 生成POM文件并放置在META-INF/maven目录下
+    into("META-INF/maven/$project.group/$project.name") {
+        from { generatePomFileForMavenJavaPublication }
+        rename ".*", "pom.xml"
+    }
+
+    // 设置MANIFEST.MF文件的属性
+    afterEvaluate {
+        manifest {
+            attributes 'Implementation-Title': archiveBaseName
+            attributes 'Implementation-Version': archiveVersion
+            attributes 'Built-Gradle': gradle.gradleVersion
+            attributes 'Build-OS': System.getProperty("os.name")
+            attributes 'Built-By': System.getProperty("user.name")
+            attributes 'Build-Jdk': System.getProperty("java.version")
+            attributes 'Build-Timestamp': LocalDateTime.now().format("yyyy-MM-dd HH:mm:ss")
+        }
+    }
+}
+
+
+repositories {
+    mavenCentral()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+
+                name = 'tlv'
+                description = 'java高效序列化工具'
+                url = 'https://github.com/fashionbrot/tlv.git'
+                packaging 'jar'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'fashionbrot'
+                        name = 'fashionbrot'
+                        email = "fashionbrot@163.com"
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/fashionbrot/tlv.git'
+                    developerConnection = 'scm:git:ssh://github.com/fashionbrot/tlv.git'
+                    url = 'https://github.com/fashionbrot/tlv.git'
+                }
+
+                withXml {
+                    def root = asNode()
+                    root.dependencies.'*'.findAll {
+                        def d = it
+                        d.scope.text() == 'runtime' && project.configurations.findByName("implementation").allDependencies.find { dep ->
+                            dep.name == it.artifactId.text()
+                        }.each() {
+                            d.scope*.value = 'compile'
+                            d.appendNode('optional', true)
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials {
+                username System.getProperty("oss.username")
+                password System.getProperty("oss.password")
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+
+
+ext{
+
+}
+configurations {
+}
+
+dependencies {
+
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    implementation 'org.slf4j:slf4j-api:1.7.10'
+
+
+
+    testImplementation 'cn.hutool:hutool-all:5.8.1'
+    testImplementation "junit:junit:4.13.2"
+    testImplementation 'org.slf4j:slf4j-api:1.7.10'
+    testCompileOnly 'org.projectlombok:lombok:1.18.20'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
+    testImplementation 'org.springframework.security:spring-security-crypto:5.8.5'
+    testImplementation 'net.sourceforge.tess4j:tess4j:4.5.4'
+    testImplementation 'com.alibaba.fastjson2:fastjson2:2.0.8'
+    testImplementation 'com.google.protobuf:protobuf-java:3.15.3'
+    testImplementation 'com.google.protobuf:protobuf-java-util:3.15.3'
+    testImplementation 'com.google.code.gson:gson:2.8.6'
+}
+
+
+
+test {
+    // 在这里设置自定义编译选项
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += ["-parameters"]
+    }
+}
+
+
+
+javadoc.options.encoding="UTF-8"
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+[compileJava,compileTestJava,javadoc]*.options*.encoding = 'UTF-8'
+
+
+
