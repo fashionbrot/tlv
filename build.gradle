@@ -11,6 +11,17 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
+
+
+group 'com.github.fashionbrot'
+version '0.0.1'
+
+
+// 指定java版本
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
 java {
     withJavadocJar()
     withSourcesJar()
@@ -135,6 +146,14 @@ dependencies {
     testImplementation 'com.google.protobuf:protobuf-java:3.15.3'
     testImplementation 'com.google.protobuf:protobuf-java-util:3.15.3'
     testImplementation 'com.google.code.gson:gson:2.8.6'
+}
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.warnings = false
+    options.deprecation = true
+//    options.compilerArgs += ["-parameters"]
 }
 
 
