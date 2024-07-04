@@ -1,16 +1,12 @@
 package com.github.fashionbrot.tlv;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author fashionbrot
  */
-@Getter
-@AllArgsConstructor
+
 public enum BinaryCodeLength {
 
     B1("000", 1),
@@ -24,6 +20,19 @@ public enum BinaryCodeLength {
 
     private final String binaryCode;
     private final int length;
+
+    BinaryCodeLength(String binaryCode, int length) {
+        this.binaryCode = binaryCode;
+        this.length = length;
+    }
+
+    public String getBinaryCode() {
+        return binaryCode;
+    }
+
+    public int getLength() {
+        return length;
+    }
 
     private static final Map<String, Integer> BINARY_TO_LENGTH_MAP = new HashMap<>();
     private static final Map<Integer, String> LENGTH_TO_BINARY_MAP = new HashMap<>();

@@ -1,7 +1,5 @@
 package com.github.fashionbrot.tlv;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -16,8 +14,7 @@ import java.util.Map;
 /**
  * @author fashionbrot
  */
-@AllArgsConstructor
-@Getter
+
 public  enum BinaryType{
 
     /**
@@ -77,6 +74,20 @@ public  enum BinaryType{
 
     private final String binaryCode;
     private final Class[] type;
+
+    BinaryType(String binaryCode, Class[] type) {
+        this.binaryCode = binaryCode;
+        this.type = type;
+    }
+
+    public String getBinaryCode() {
+        return binaryCode;
+    }
+
+    public Class[] getType() {
+        return type;
+    }
+
     private static final Map<String, BinaryType> BINARY_CODE_MAP = new HashMap<>();
     private static final Map<Class<?>, BinaryType> TYPE_MAP = new HashMap<>();
 

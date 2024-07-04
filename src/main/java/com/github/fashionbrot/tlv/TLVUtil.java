@@ -178,7 +178,10 @@ public class TLVUtil {
                 continue;
             }
             int index = annotation != null ? annotation.index() : Integer.MAX_VALUE;
-            fieldList.add(FieldModel.builder().index(index).field(declaredField).build());
+            FieldModel fieldModel=new FieldModel();
+            fieldModel.setField(declaredField);
+            fieldModel.setIndex(index);
+            fieldList.add(fieldModel);
         }
         return fieldList;
     }
