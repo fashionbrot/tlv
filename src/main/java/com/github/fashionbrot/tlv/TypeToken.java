@@ -1,4 +1,4 @@
-package com.github.fashionbrot.common.tlv;
+package com.github.fashionbrot.tlv;
 
 
 import java.lang.reflect.*;
