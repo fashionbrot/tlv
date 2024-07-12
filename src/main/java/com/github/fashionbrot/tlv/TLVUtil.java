@@ -2,6 +2,7 @@ package com.github.fashionbrot.tlv;
 
 import com.github.fashionbrot.tlv.annotation.TLVField;
 
+import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,6 +12,11 @@ public class TLVUtil {
     public static final byte[] BYTE_ARRAY_ONE = new byte[1];
     private static final Map<Class, List<Field>> CLASS_CACHE = new ConcurrentHashMap<>();
 
+
+    public static <T> byte[] compressSerialize(T input) throws IOException {
+        byte[] serialize = serialize(input);
+        return GzipUtil.compress(serialize);
+    }
 
     /**
      * 序列化
@@ -204,6 +210,10 @@ public class TLVUtil {
     /** ------------------------------------------反序列化-----------------------------------------------**/
 
 
+    public static <T> T decompressDeserialize(Class<T> deserializeClass, byte[] data) throws IOException {
+        byte[] bytes = GzipUtil.decompressToByte(data);
+        return deserialize(deserializeClass,bytes);
+    }
     /**
      * 反序列化
      * @param deserializeClass 反序列化Class
@@ -235,6 +245,11 @@ public class TLVUtil {
         }
     }
 
+    public static <T> T decompressDeserializeList(Class<T> deserializeClass, byte[] data) throws IOException {
+        byte[] bytes = GzipUtil.decompressToByte(data);
+        return (T) deserializeList(deserializeClass, new ByteArrayReader(bytes));
+    }
+
     public static <T> List<T> deserializeList(Class<T> clazz, byte[] bytes) {
         return deserializeList(clazz, new ByteArrayReader(bytes));
     }
@@ -248,6 +263,11 @@ public class TLVUtil {
             list.add(deserialize(clazz, clazz, reader));
         }
         return list;
+    }
+
+    public static <T> T[] decompressDeserializeArray(Class<T> deserializeClass, byte[] data) throws IOException {
+        byte[] bytes = GzipUtil.decompressToByte(data);
+        return deserializeArray(deserializeClass, new ByteArrayReader(bytes));
     }
 
     public static <T> T[] deserializeArray(Class<T> clazz, byte[] bytes) {
