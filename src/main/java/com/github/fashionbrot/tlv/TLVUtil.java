@@ -139,8 +139,8 @@ public class TLVUtil {
 
     public static byte generateTag(Class classType, byte[] valueBytes) {
         BinaryType binaryType = BinaryType.getBinaryType(classType);
-        String valueByteLengthBinary = BinaryCodeLength.getBinaryCode(TLVTypeUtil.encodeVarInteger(isNotEmpty(valueBytes) ? valueBytes.length : 0).length);
-        return binaryStringToByte(binaryType.getBinaryCode() + valueByteLengthBinary);
+        byte valueByteLengthBinary = BinaryCodeLength.getBinaryCode(TLVTypeUtil.encodeVarInteger(isNotEmpty(valueBytes) ? valueBytes.length : 0).length);
+        return combineBitsIntoByte(binaryType.getBinaryCode() ,valueByteLengthBinary);
     }
 
 
@@ -307,9 +307,8 @@ public class TLVUtil {
         int readIndex = reader.getLastReadIndex();
         byte firstByte = reader.readFrom(readIndex);
         //第一位byte(前5个bit 是value数据类型 后3个bit 是valueByte.length 经过 varInt 压缩后的长度)
-        String binaryString = byteToBinaryString(firstByte);
-        BinaryType valueType = BinaryType.fromBinaryCode(binaryString.substring(0, 5));
-        int valueByteLengthLength = BinaryCodeLength.getLength(binaryString.substring(5, 8));
+        BinaryType valueType = BinaryType.fromBinaryCode(firstByte);
+        int valueByteLengthLength = BinaryCodeLength.getLength(firstByte);
 
         reader.setLastBinaryType(valueType);
 
@@ -498,5 +497,11 @@ public class TLVUtil {
             return false;
         }
         return !isObject(type);
+    }
+
+    public static byte combineBitsIntoByte(byte first5, byte last3) {
+        // 使用 b5 和 b3 进行组装成一个新的字节
+        // 将 b5 左移3位后，再与 b3 进行按位或操作
+        return  (byte) ((first5 << 3) | last3);
     }
 }
