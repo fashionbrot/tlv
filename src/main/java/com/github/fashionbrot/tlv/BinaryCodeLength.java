@@ -9,24 +9,24 @@ import java.util.Map;
 
 public enum BinaryCodeLength {
 
-    B1("000", 1),
-    B2("001", 2),
-    B3("010", 3),
-    B4("011", 4),
-    B5("100", 5),
-    B6("101", 6),
-    B7("110", 7),
-    B8("111", 8);
+    B1((byte)0b000, 1),
+    B2((byte)0b001, 2),
+    B3((byte)0b010, 3),
+    B4((byte)0b011, 4),
+    B5((byte)0b100, 5),
+    B6((byte)0b101, 6),
+    B7((byte)0b110, 7),
+    B8((byte)0b111, 8);
 
-    private final String binaryCode;
+    private final byte binaryCode;
     private final int length;
 
-    BinaryCodeLength(String binaryCode, int length) {
+    BinaryCodeLength(byte binaryCode, int length) {
         this.binaryCode = binaryCode;
         this.length = length;
     }
 
-    public String getBinaryCode() {
+    public byte getBinaryCode() {
         return binaryCode;
     }
 
@@ -34,8 +34,8 @@ public enum BinaryCodeLength {
         return length;
     }
 
-    private static final Map<String, Integer> BINARY_TO_LENGTH_MAP = new HashMap<>();
-    private static final Map<Integer, String> LENGTH_TO_BINARY_MAP = new HashMap<>();
+    private static final Map<Byte, Integer> BINARY_TO_LENGTH_MAP = new HashMap<>();
+    private static final Map<Integer, Byte> LENGTH_TO_BINARY_MAP = new HashMap<>();
 
     static {
         for (BinaryCodeLength code : BinaryCodeLength.values()) {
@@ -44,16 +44,17 @@ public enum BinaryCodeLength {
         }
     }
 
-    public static int getLength(String binaryCode) {
-        Integer length = BINARY_TO_LENGTH_MAP.get(binaryCode);
+    public static int getLength(Byte binaryCode) {
+        byte last3 = (byte) (binaryCode & 0b111);
+        Integer length = BINARY_TO_LENGTH_MAP.get(last3);
         if (length == null) {
-            throw new IllegalArgumentException("Invalid binary code: " + binaryCode);
+            throw new IllegalArgumentException("Invalid binary code: " + last3);
         }
         return length;
     }
 
-    public static String getBinaryCode(int length) {
-        String binaryCode = LENGTH_TO_BINARY_MAP.get(length);
+    public static Byte getBinaryCode(int length) {
+        Byte binaryCode = LENGTH_TO_BINARY_MAP.get(length);
         if (binaryCode == null) {
             throw new IllegalArgumentException("Invalid length: " + length);
         }

@@ -1,6 +1,5 @@
 package com.github.fashionbrot.tlv;
 
-
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,11 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author fashionbrot
- */
-
-public  enum BinaryType{
+public enum BinaryType {
 
     /**
      * 00000 (0)
@@ -52,35 +47,33 @@ public  enum BinaryType{
      * 11110 (30)
      * 11111 (31)
      */
-    BOOLEAN("00000",new Class[]{boolean.class,Boolean.class}),
-    BYTE("00001",new Class[]{byte.class,Byte.class}),
-    CHAR("00010",new Class[]{char.class,Character.class}),
-    SHORT("00011",new Class[]{short.class,Short.class}),
-    INTEGER("00100",new Class[]{int.class,Integer.class}),
-    FLOAT("00101",new Class[]{float.class,Float.class}),
-    LONG("00110",new Class[]{long.class,Long.class}),
-    DOUBLE("00111",new Class[]{double.class,Double.class}),
-    STRING("01000",new Class[]{String.class,CharSequence.class}),
-    DATE("01001", new Class[]{Date.class}),
-    LOCAL_TIME("01010",new Class[]{LocalTime.class}),
-    LOCAL_DATE("01011", new Class[]{LocalDate.class}),
-    LOCAL_DATE_TIME("01100", new Class[]{LocalDateTime.class}),
-    BIG_DECIMAL("01101",new Class[]{ BigDecimal.class}),
-    ARRAY("01110", new Class[]{Array.class}),
-    LIST("01111", new Class[]{List.class}),
+    BOOLEAN((byte) 0b00000, new Class[]{Boolean.class, boolean.class}),
+    BYTE((byte) 0b00001, new Class[]{Byte.class, byte.class}),
+    CHAR((byte) 0b00010, new Class[]{Character.class, char.class}),
+    SHORT((byte) 0b00011, new Class[]{Short.class, short.class}),
+    INTEGER((byte) 0b00100, new Class[]{Integer.class, int.class}),
+    FLOAT((byte) 0b00101, new Class[]{Float.class, float.class}),
+    LONG((byte) 0b00110, new Class[]{Long.class, long.class}),
+    DOUBLE((byte) 0b00111, new Class[]{Double.class, double.class}),
+    STRING((byte) 0b01000, new Class[]{CharSequence.class, String.class}),
+    DATE((byte) 0b01001, new Class[]{Date.class}),
+    LOCAL_TIME((byte) 0b01010, new Class[]{LocalTime.class}),
+    LOCAL_DATE((byte) 0b01011, new Class[]{LocalDate.class}),
+    LOCAL_DATE_TIME((byte) 0b01100, new Class[]{LocalDateTime.class}),
+    BIG_DECIMAL((byte) 0b01101, new Class[]{BigDecimal.class}),
+    ARRAY((byte) 0b01110, new Class[]{Array.class}),
+    LIST((byte) 0b01111, new Class[]{List.class}),
     ;
 
-
-
-    private final String binaryCode;
+    private final byte binaryCode;
     private final Class[] type;
 
-    BinaryType(String binaryCode, Class[] type) {
+    BinaryType(byte binaryCode, Class[] type) {
         this.binaryCode = binaryCode;
         this.type = type;
     }
 
-    public String getBinaryCode() {
+    public byte getBinaryCode() {
         return binaryCode;
     }
 
@@ -88,7 +81,7 @@ public  enum BinaryType{
         return type;
     }
 
-    private static final Map<String, BinaryType> BINARY_CODE_MAP = new HashMap<>();
+    private static final Map<Byte, BinaryType> BINARY_CODE_MAP = new HashMap<>();
     private static final Map<Class<?>, BinaryType> TYPE_MAP = new HashMap<>();
 
     static {
@@ -103,12 +96,14 @@ public  enum BinaryType{
     /**
      * Retrieves the BinaryType corresponding to the given binary code.
      *
-     * @param binaryCode the binary code as a string
+     * @param binaryCode the binary code as a byte
      * @return the corresponding BinaryType
      * @throws IllegalArgumentException if no BinaryType is found for the given binary code
      */
-    public static BinaryType fromBinaryCode(String binaryCode) {
-        BinaryType result = BINARY_CODE_MAP.get(binaryCode);
+    public static BinaryType fromBinaryCode(byte binaryCode) {
+        byte first5Bits = (byte) ((binaryCode >> 3) & 0b11111);
+
+        BinaryType result = BINARY_CODE_MAP.get(first5Bits);
         if (result == null) {
             throw new IllegalArgumentException("No enum constant found for binary code: " + binaryCode);
         }
@@ -135,4 +130,5 @@ public  enum BinaryType{
         }
         throw new IllegalArgumentException("Unsupported type: " + type);
     }
+
 }
