@@ -145,7 +145,7 @@ public class TLVUtil {
 
     public static byte generateTag(Class classType, byte[] valueBytes) {
         BinaryType binaryType = BinaryType.getBinaryType(classType);
-        byte valueByteLengthBinary = BinaryCodeLength.getBinaryCode(TLVTypeUtil.encodeVarInteger(isNotEmpty(valueBytes) ? valueBytes.length : 0).length);
+        byte valueByteLengthBinary = BinaryCodeLength.getBinaryCode(TLVTypeUtil.encodeVarInteger(valueBytes!=null ? valueBytes.length : 0).length);
         return combineBitsIntoByte(binaryType.getBinaryCode() ,valueByteLengthBinary);
     }
 
@@ -207,7 +207,7 @@ public class TLVUtil {
     }
 
 
-    /** ------------------------------------------反序列化-----------------------------------------------**/
+//    /** ------------------------------------------反序列化-----------------------------------------------**/
 
 
     public static <T> T decompressDeserialize(Class<T> deserializeClass, byte[] data) throws IOException {
