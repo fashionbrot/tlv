@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<button id="showPopupBtn">Show Popup</button>
+<button id="hidePopupBtn">Hide Popup</button>
+
+
+<script type="text/javascript">
+
+    (function (global, factory) {
+        if (typeof module === "object" && typeof module.exports === "object") {
+            module.exports = factory(global);
+        } else {
+            factory(global);
+        }
+    }(typeof window !== "undefined" ? window : this, function (window) {
+        'use strict';
+
+        var Popup = (function () {
+            function Popup() {
+                this.init();
+            }
+
+            Popup.prototype.init = function () {
+                this.createPopup();
+            };
+
+            Popup.prototype.createPopup = function () {
+                var popup = document.createElement('div');
+                popup.id = 'popup';
+                popup.style.position = 'fixed';
+                popup.style.left = '50%';
+                popup.style.top = '50%';
+                popup.style.transform = 'translate(-50%, -50%)';
+                popup.style.padding = '20px';
+                popup.style.backgroundColor = '#fff';
+                popup.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+                popup.style.display = 'none';
+                document.body.appendChild(popup);
+
+                this.popup = popup;
+            };
+
+            Popup.prototype.show = function (message) {
+                this.popup.innerText = message;
+                this.popup.style.display = 'block';
+            };
+
+            Popup.prototype.hide = function () {
+                this.popup.style.display = 'none';
+            };
+
+            return Popup;
+        }());
+
+        // 将Popup对象挂载到window对象上，使其可以在全局访问
+        window.Popup = Popup;
+    }));
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var popup = new Popup();
+
+        document.getElementById('showPopupBtn').addEventListener('click', function () {
+            popup.show('Hello, this is a popup message!');
+        });
+
+        document.getElementById('hidePopupBtn').addEventListener('click', function () {
+            popup.hide();
+        });
+
+    });
+
+
+</script>
+</body>
+</html>

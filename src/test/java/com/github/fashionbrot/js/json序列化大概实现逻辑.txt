@@ -1,0 +1,193 @@
+我用java 实现了 一种序列化组装的格式是
+第一个byte = tag + valueLengthLength
+valueLengthLength 的意思是
+value 比如 encodeVarInteger(byteValue.length).length=1 ,对应的 valueLengthLength =B1("000", 1),
+value 比如 encodeVarInteger(byteValue.length).length=2 占用个字节对应的
+valueLengthLength =B2("001", 2),
+依次类推
+value 占用
+ 占用3个bit如下
+    B1("000", 1),
+    B2("001", 2),
+    B3("010", 3),
+    B4("011", 4),
+    B5("100", 5),
+    B6("101", 6),
+    B7("110", 7),
+    B8("111", 8);
+tag如下 占用5个bit
+    BOOLEAN("00000",boolean.class),
+    BYTE("00001",byte.class),
+    CHAR("00010",char.class),
+    SHORT("00011",short.class),
+    INTEGER("00100",int.class),
+    FLOAT("00101",float.class),
+    LONG("00110",long.class),
+    DOUBLE("00111",double.class),
+    STRING("01000",String.class),
+    DATE("01001", Date.class),
+    LOCAL_TIME("01010", LocalTime.class),
+    LOCAL_DATE("01011", LocalDate.class),
+    LOCAL_DATE_TIME("01100", LocalDateTime.class),
+    BIG_DECIMAL("01101", BigDecimal.class),
+    ARRAY("01110", Array.class),
+    LIST("01111", List.class),
+
+    public static byte[] encodeVarInteger(int value)  {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        while ((value & 0xFFFFFF80) != 0) {
+            output.write((value & 0x7F) | 0x80);
+            value >>>= 7;
+        }
+        output.write(value & 0x7F);
+        return output.toByteArray();
+    }
+
+第二个字节 比如 encodeVarInteger(byteValue.length) = n个字节
+第三个就是 byteValue
+
+按照这种组合，给我用js 实现序列化成json 数据，序列化字段的顺序就是按照 json 字段排序的方式序列化
+
+
+
+// 定义长度编码函数
+function encodeVarInteger(value) {
+    let output = [];
+    while ((value & 0xFFFFFF80) !== 0) {
+        output.push((value & 0x7F) | 0x80);
+        value >>>= 7;
+    }
+    output.push(value & 0x7F);
+    return output;
+}
+
+// 定义序列化函数
+function serialize(obj) {
+    let serialized = [];
+    // 按照字段排序的方式对对象进行序列化
+    let keys = Object.keys(obj).sort();
+    for (let key of keys) {
+        let value = obj[key];
+        let type = getType(value);
+        let tag = getTypeTag(type);
+        let lengthBytes = encodeVarInteger(value.length);
+        let dataBytes = new TextEncoder().encode(value);
+
+        // 组装序列化数据
+        serialized.push(tag, lengthBytes.length, ...lengthBytes, ...dataBytes);
+    }
+    return serialized;
+}
+
+// 获取值的类型
+function getType(value) {
+    if (Array.isArray(value)) {
+        return 'ARRAY';
+    } else if (typeof value === 'string') {
+        return 'STRING';
+    } else if (typeof value === 'boolean') {
+        return 'BOOLEAN';
+    } else if (typeof value === 'number') {
+        if (Number.isInteger(value)) {
+            return 'INTEGER';
+        } else {
+            return 'FLOAT';
+        }
+    } else {
+        throw new Error('Unsupported type');
+    }
+}
+
+// 根据类型获取标签
+function getTypeTag(type) {
+    // 在这里加入你的类型标签逻辑
+    // 例如：
+    switch (type) {
+        case 'BOOLEAN':
+            return 0b00000;
+        case 'INTEGER':
+            return 0b00100;
+        // 其他类型的处理
+        default:
+            throw new Error('Unsupported type');
+    }
+}
+
+// 示例对象
+let obj = {
+    key1: "value1",
+    key2: true,
+    key3: [1, 2, 3]
+};
+
+// 序列化对象
+let serializedData = serialize(obj);
+console.log(serializedData);
+
+
+
+//以下提供参考
+
+// 假设 byte 数组
+const byteArray = new Uint8Array([8, 123, 18, 5, 65, 108, 105, 99, 101]);
+
+// 解析 Tag
+function parseTag(byteArray, offset) {
+  const tag = byteArray[offset];
+  const fieldNumber = tag >> 3; // 右移 3 位得到字段编号
+  const wireType = tag & 0x07; // 与运算获取低 3 位得到 Wire Type
+  return { fieldNumber, wireType };
+}
+
+// 解析 Varint 编码的整数
+function parseVarint(byteArray, offset) {
+  let result = 0;
+  let shift = 0;
+  let byte;
+  do {
+    byte = byteArray[offset++];
+    result |= (byte & 0x7F) << shift;
+    shift += 7;
+  } while (byte & 0x80);
+  return { value: result, offset };
+}
+
+// 解析 Length-delimited 编码的字符串
+function parseString(byteArray, offset, length) {
+  const strBytes = byteArray.subarray(offset, offset + length);
+  const decoder = new TextDecoder("utf-8");
+  const value = decoder.decode(strBytes);
+  return { value, offset: offset + length };
+}
+
+// 解析 byte 数组
+function parseByteArray(byteArray) {
+  let offset = 0;
+  let id, name;
+
+  while (offset < byteArray.length) {
+    const { fieldNumber, wireType } = parseTag(byteArray, offset);
+    if (fieldNumber === 1 && wireType === 0) {
+      // id 字段
+      const { value, offset: newOffset } = parseVarint(byteArray, offset + 1);
+      id = value;
+      offset = newOffset;
+    } else if (fieldNumber === 2 && wireType === 2) {
+      // name 字段
+      const { value, offset: newOffset } = parseVarint(byteArray, offset + 1);
+      const { value: strValue, offset: stringOffset } = parseString(byteArray, newOffset, value);
+      name = strValue;
+      offset = stringOffset;
+    } else {
+      // 未知字段类型
+      console.error("Unknown field type or number");
+      break;
+    }
+  }
+
+  return { id, name };
+}
+
+// 解析 byte 数组
+const parsedData = parseByteArray(byteArray);
+console.log(parsedData);
