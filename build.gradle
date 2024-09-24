@@ -14,7 +14,7 @@ apply plugin: 'signing'
 
 
 group 'com.github.fashionbrot'
-version '0.0.2'
+version '0.0.3'
 
 
 // 指定java版本

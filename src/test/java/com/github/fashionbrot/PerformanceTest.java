@@ -54,7 +54,7 @@ public class PerformanceTest {
             .test10("aa")
             .build();
 
-    private static final int count = 1;
+    private static final int count = 100000;
 
 
 

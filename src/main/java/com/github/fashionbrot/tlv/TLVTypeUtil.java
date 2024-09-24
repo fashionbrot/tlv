@@ -12,64 +12,155 @@ import java.util.Date;
 
 public class TLVTypeUtil {
 
+//    public static byte[] encodeVarChar(char value) {
+//        ByteArrayOutputStream output = new ByteArrayOutputStream();
+//        int intValue = value; // 将char转换为int以便处理
+//        while ((intValue & 0xFFFFFF80) != 0) {
+//            output.write((intValue & 0x7F) | 0x80);
+//            intValue >>>= 7;
+//        }
+//        output.write(intValue & 0x7F);
+//        return output.toByteArray();
+//    }
+
     public static byte[] encodeVarChar(char value) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        int intValue = value; // 将char转换为int以便处理
+        // 一个 char 类型值最多可以用 3 个字节来编码
+        byte[] buffer = new byte[3];
+        int position = 0;
+        int intValue = value; // 将 char 转换为 int 以便处理
+
+        // 当有超过 7 位需要编码时
         while ((intValue & 0xFFFFFF80) != 0) {
-            output.write((intValue & 0x7F) | 0x80);
-            intValue >>>= 7;
+            buffer[position++] = (byte) ((intValue & 0x7F) | 0x80); // 设置延续位
+            intValue >>>= 7; // 将值右移 7 位
         }
-        output.write(intValue & 0x7F);
-        return output.toByteArray();
+        // 写入最后一个字节，不包含延续位
+        buffer[position++] = (byte) (intValue & 0x7F);
+
+        // 只返回实际使用的部分
+        byte[] result = new byte[position];
+        System.arraycopy(buffer, 0, result, 0, position);
+        return result;
     }
 
+
+//    public static char decodeVarChar(byte[] data) {
+//        int result = 0;
+//        int shift = 0;
+//        int index = 0;
+//        byte b;
+//        do {
+//            if (index >= data.length) {
+//                throw new RuntimeException("decodeVarChar decoding error: Insufficient data");
+//            }
+//            b = data[index++];
+//            result |= (b & 0x7F) << shift;
+//            shift += 7;
+//        } while ((b & 0x80) != 0);
+//        return (char) result;
+//    }
 
     public static char decodeVarChar(byte[] data) {
         int result = 0;
         int shift = 0;
         int index = 0;
-        byte b;
-        do {
-            if (index >= data.length) {
-                throw new RuntimeException("decodeVarChar decoding error: Insufficient data");
-            }
-            b = data[index++];
+
+        while (index < data.length) {
+            byte b = data[index++];
             result |= (b & 0x7F) << shift;
+
+            // 如果最高位不是 1，表示这是最后一个字节
+            if ((b & 0x80) == 0) {
+                // 确保 result 不会超出 char 的范围
+                if (result > 0xFFFF) {
+                    throw new RuntimeException("decodeVarChar decoding error: Value exceeds char range");
+                }
+                return (char) result;
+            }
+
             shift += 7;
-        } while ((b & 0x80) != 0);
-        return (char) result;
-    }
 
-
-
-
-
-    public static byte[] encodeVarInteger(int value)  {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        while ((value & 0xFFFFFF80) != 0) {
-            output.write((value & 0x7F) | 0x80);
-            value >>>= 7;
+            // 检查 shift 是否超出了 char 的位数范围
+            if (shift >= 16) {
+                throw new RuntimeException("decodeVarChar decoding error: Too many bytes");
+            }
         }
-        output.write(value & 0x7F);
-        return output.toByteArray();
+
+        throw new RuntimeException("decodeVarChar decoding error: Insufficient data");
     }
 
-    public static int decodeVarInteger(byte[] data)  {
 
+
+
+
+//    public static byte[] encodeVarInteger(int value)  {
+//        ByteArrayOutputStream output = new ByteArrayOutputStream();
+//        while ((value & 0xFFFFFF80) != 0) {
+//            output.write((value & 0x7F) | 0x80);
+//            value >>>= 7;
+//        }
+//        output.write(value & 0x7F);
+//        return output.toByteArray();
+//    }
+
+    public static byte[] encodeVarInteger(int value) {
+        // 一个 int 类型值最多可以用 5 个字节来编码
+        byte[] buffer = new byte[5];
+        int position = 0;
+
+        // 当有超过 7 位需要编码时
+        while ((value & 0xFFFFFF80) != 0) {
+            buffer[position++] = (byte) ((value & 0x7F) | 0x80);  // 设置延续位
+            value >>>= 7;  // 将值右移 7 位
+        }
+        // 写入最后一个字节，不包含延续位
+        buffer[position++] = (byte) (value & 0x7F);
+
+        // 只返回实际使用的部分
+        byte[] result = new byte[position];
+        System.arraycopy(buffer, 0, result, 0, position);
+        return result;
+    }
+
+
+//    public static int decodeVarInteger(byte[] data)  {
+//
+//        int result = 0;
+//        int shift = 0;
+//        int index = 0;
+//        byte b;
+//        do {
+//            if (index >= data.length) {
+//                throw new RuntimeException("Varint decoding error: Insufficient data");
+//            }
+//            b = data[index++];
+//            result |= (b & 0x7F) << shift;
+//            shift += 7;
+//        } while ((b & 0x80) != 0);
+//        return result;
+//    }
+
+    public static int decodeVarInteger(byte[] data) {
         int result = 0;
         int shift = 0;
         int index = 0;
-        byte b;
-        do {
-            if (index >= data.length) {
-                throw new RuntimeException("Varint decoding error: Insufficient data");
-            }
-            b = data[index++];
+
+        while (index < data.length) {
+            byte b = data[index++];
             result |= (b & 0x7F) << shift;
+            if ((b & 0x80) == 0) {
+                // 如果最高位不是 1，则结束解码
+                return result;
+            }
             shift += 7;
-        } while ((b & 0x80) != 0);
-        return result;
+            // 如果 shift 超过 int 的位数范围，说明 varint 过长
+            if (shift >= 32) {
+                throw new RuntimeException("Varint decoding error: Too many bytes");
+            }
+        }
+        throw new RuntimeException("Varint decoding error: Insufficient data");
     }
+
 
 
     public static byte[] encodeVarShort(short value) {
@@ -82,31 +173,69 @@ public class TLVTypeUtil {
 
 
 
+//    public static byte[] encodeVarLong(long value) {
+//        ByteArrayOutputStream output = new ByteArrayOutputStream();
+//        while ((value & 0xFFFFFFFFFFFFFF80L) != 0L) {
+//            output.write((byte) ((value & 0x7F) | 0x80));
+//            value >>>= 7;
+//        }
+//        output.write((byte) (value & 0x7F));
+//        return output.toByteArray();
+//    }
+
     public static byte[] encodeVarLong(long value) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[10];
+        int position = 0;
         while ((value & 0xFFFFFFFFFFFFFF80L) != 0L) {
-            output.write((byte) ((value & 0x7F) | 0x80));
+            buffer[position++] = (byte) ((value & 0x7F) | 0x80);
             value >>>= 7;
         }
-        output.write((byte) (value & 0x7F));
-        return output.toByteArray();
-    }
-
-    public static long decodeVarLong(byte[] data)  {
-        long result = 0L;
-        int shift = 0;
-        int index = 0;
-        byte b;
-        do {
-            if (index >= data.length) {
-                throw new RuntimeException("Varint decoding error: Insufficient data");
-            }
-            b = data[index++];
-            result |= (b & 0x7FL) << shift;
-            shift += 7;
-        } while ((b & 0x80) != 0);
+        buffer[position++] = (byte) (value & 0x7F);
+        byte[] result = new byte[position];
+        System.arraycopy(buffer, 0, result, 0, position);
         return result;
     }
+
+//    public static long decodeVarLong(byte[] data)  {
+//        long result = 0L;
+//        int shift = 0;
+//        int index = 0;
+//        byte b;
+//        do {
+//            if (index >= data.length) {
+//                throw new RuntimeException("Varint decoding error: Insufficient data");
+//            }
+//            b = data[index++];
+//            result |= (b & 0x7FL) << shift;
+//            shift += 7;
+//        } while ((b & 0x80) != 0);
+//        return result;
+//    }
+        public static long decodeVarLong(byte[] data) {
+            long result = 0L;
+            int shift = 0;
+            int index = 0;
+
+            while (index < data.length) {
+                byte b = data[index++];
+                result |= (b & 0x7FL) << shift;
+
+                // 如果最高位不是 1，表示这是最后一个字节
+                if ((b & 0x80) == 0) {
+                    return result;
+                }
+
+                shift += 7;
+
+                // 检查 shift 是否超出了 long 的位数范围（最多63位，因为64位的第1位是符号位）
+                if (shift >= 64) {
+                    throw new RuntimeException("Varint decoding error: Too many bytes");
+                }
+            }
+
+            throw new RuntimeException("Varint decoding error: Insufficient data");
+        }
+
 
 
     public static byte[] encodeVarFloat(float value) {

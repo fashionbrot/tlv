@@ -56,6 +56,28 @@ public class TLVUtil {
         return createTLV(listValue, type);
     }
 
+//    private static byte[] createTLV(byte[] valueBytes, Class type) {
+//        byte tag = generateTag(type, valueBytes);
+//        // 计算总长度
+//        byte[] lengthBytes = TLVTypeUtil.encodeVarInteger(valueBytes.length);
+//        int totalLength = 1 + lengthBytes.length + valueBytes.length;
+//        // 创建结果数组
+//        byte[] result = new byte[totalLength];
+//        // 填充结果数组
+//        int currentIndex = 0;
+//        // 添加 tag
+//        result[currentIndex++] = tag;
+//        // 添加 length
+//        for (byte b : lengthBytes) {
+//            result[currentIndex++] = b;
+//        }
+//        // 添加 valueBytes
+//        for (byte b : valueBytes) {
+//            result[currentIndex++] = b;
+//        }
+//        return result;
+//    }
+
     private static byte[] createTLV(byte[] valueBytes, Class type) {
         byte tag = generateTag(type, valueBytes);
         // 计算总长度
@@ -68,13 +90,11 @@ public class TLVUtil {
         // 添加 tag
         result[currentIndex++] = tag;
         // 添加 length
-        for (byte b : lengthBytes) {
-            result[currentIndex++] = b;
-        }
+        System.arraycopy(lengthBytes, 0, result, currentIndex, lengthBytes.length);
+        currentIndex += lengthBytes.length;
+
         // 添加 valueBytes
-        for (byte b : valueBytes) {
-            result[currentIndex++] = b;
-        }
+        System.arraycopy(valueBytes, 0, result, currentIndex, valueBytes.length);
         return result;
     }
 
@@ -360,19 +380,18 @@ public class TLVUtil {
         // 计算总长度
         int totalLength = 0;
         for (byte[] array : list) {
-            if (array != null && array.length > 0) {
+            if (array != null) {
                 totalLength += array.length;
             }
         }
         // 创建结果数组
         byte[] result = new byte[totalLength];
-        // 合并字节数组
         int currentIndex = 0;
+        // 合并字节数组
         for (byte[] array : list) {
-            if (array != null && array.length > 0) {
-                for (byte b : array) {
-                    result[currentIndex++] = b;
-                }
+            if (array != null) {
+                System.arraycopy(array, 0, result, currentIndex, array.length);
+                currentIndex += array.length;
             }
         }
         return result;
